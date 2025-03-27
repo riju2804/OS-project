@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+
+// Function to check if all processes have finished execution
+bool isSafeState(vector<vector<int>> &allocation, vector<vector<int>> &request, vector<int> &available, int num_processes, int num_resources) {
+    vector<bool> finished(num_processes, false);
+    vector<int> work = available;
+    vector<int> safe_sequence;
+
+    int count = 0;
+    while (count < num_processes) {
+        bool found = false;
+        for (int i = 0; i < num_processes; i++) {
+            if (!finished[i]) {
+                bool canAllocate = true;
+                for (int j = 0; j < num_resources; j++) {
+                    if (request[i][j] > work[j]) {
+                        canAllocate = false;
+                        break;
+                    }
+                }
+                if (canAllocate) {
+                    for (int j = 0; j < num_resources; j++) {
+                        work[j] += allocation[i][j]; // Release resources after execution
+                    }
+                    finished[i] = true;
+                    safe_sequence.push_back(i);
+                    found = true;
+                    count++;
+                }
+            }
+        }
+        if (!found) {
+            cout << "\033[1;31m\n⚠️ System is in Deadlock! No safe sequence found.⚠️\033[0m\n";
+            return false;
+        }
+    }
+
+    // Displaying safe sequence
+    cout << "\033[1;32m\n✅ System is in a Safe State. Safe Sequence: \033[0m";
+    for (int i : safe_sequence) {
+        cout << " P" << i;
+    }
+    cout << "\n";
+
+    return true;
+}
+
+// Function to display the matrices
+void displayMatrix(const string &title, vector<vector<int>> &matrix) {
+    cout << "\n" << title << ":\n";
+    cout << "---------------------------------\n";
+    for (auto &row : matrix) {
+        for (auto &value : row) {
+            cout << setw(3) << value << " ";
+        }
+        cout << endl;
+    }
+    cout << "---------------------------------\n";
+}
+
+int main() {
+    int num_processes, num_resources;
+    
+    cout << "\033[1;36m\n💡 AI-Powered Deadlock Detection System 💡\033[0m\n";
+    cout << "\nEnter number of processes: ";
+    cin >> num_processes;
+    cout << "Enter number of resources: ";
+    cin >> num_resources;
+
+    vector<vector<int>> allocation(num_processes, vector<int>(num_resources));
+    vector<vector<int>> request(num_processes, vector<int>(num_resources));
+    vector<int> available(num_resources);
+
+    cout << "\n🔹 Enter Allocation Matrix:\n";
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            cin >> allocation[i][j];
+        }
+    }
+
+    cout << "\n🔹 Enter Request Matrix:\n";
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            cin >> request[i][j];
+        }
+    }
+
+    cout << "\n🔹 Enter Available Resources:\n";
+    for (int i = 0; i < num_resources; i++) {
+        cin >> available[i];
+    }
+
+    // Display Matrices
+    displayMatrix("📊 Allocation Matrix", allocation);
+    displayMatrix("📊 Request Matrix", request);
+
+    cout << "\n🌍 Available Resources: ";
+    for (int res : available) cout << res << " ";
+    cout << "\n";
+
+    // Deadlock Detection
+    isSafeState(allocation, request, available, num_processes, num_resources);
+
+    return 0;
+}
